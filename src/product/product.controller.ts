@@ -1,34 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ProductService } from './product.service';
+import { Controller, ParseIntPipe } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { PaginationDto } from 'src/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductService } from './product.service';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Post()
-  create(@Body() createProductDto: CreateProductDto) {
+  @MessagePattern({ cmd: 'create_product' })
+  create(@Payload() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
   }
 
-  @Get()
-  findAll() {
-    return this.productService.findAll();
+  @MessagePattern({ cmd: 'find_all_products' })
+  findAll(@Payload() paginationDto: PaginationDto) {
+    return this.productService.findAll(paginationDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @MessagePattern({ cmd: 'find_one_product' })
+  findOne(@Payload('id', ParseIntPipe) id: number) {
     return this.productService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(+id, updateProductDto);
+  @MessagePattern({ cmd: 'update_product' })
+  update(@Payload() updateProductDto: UpdateProductDto) {
+    return this.productService.update(updateProductDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @MessagePattern({ cmd: 'delete' })
+  remove(@Payload('id', ParseIntPipe) id: string) {
     return this.productService.remove(+id);
   }
 }
